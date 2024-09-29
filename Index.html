@@ -1,0 +1,247 @@
+<!doctype html>
+<html>
+<head>
+<title>Weather Forecasting</title>
+<style>
+body {
+    background-image: url("https://images.unsplash.com/photo-1477346611705-65d1883cee1e?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8MXx8fGVufDB8fHx8fA%3D%3D");
+    margin: 0;
+    background-size: cover;
+    padding: 0;
+    display: flex;
+    background-repeat: no-repeat;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    min-height: 100vh;
+}
+h1 {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 40px;
+    color: white;
+    text-align: center;
+}
+
+.container {
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 5px solid black;
+    border-radius: 20px;
+    text-align: center;
+    width: 18%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+input {
+    display: block;
+    margin: 15px auto;
+    padding: 10px;
+    width: 50%;
+    border: 3px solid black;
+    border-radius: 20px;
+}
+
+button {
+    padding: 10px 10px;
+    width: auto;
+    background-color: skyblue;
+    color: black;
+    border: 3px solid black;
+    border-radius: 20px;
+    margin: 10px auto;
+}
+
+.weather-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.current-weather-box {
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    width: auto;
+}
+
+.weather-box {
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 2px solid black;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 0 5px;
+    width: 17%;
+    height: auto; 
+    text-align: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.weather-box h2 {
+    margin-bottom: 5px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.weather-box p {
+    margin: 4px 0;
+    font-size: 16px;
+}
+
+.weather-box img {
+    margin-top: 10px;
+    width: 60px; 
+    height: 60px; 
+}
+</style>
+</head>
+<body>
+    <h1 id="mainHeading">Weather Forecasting</h1> 
+    <div class="container" id="inputContainer">
+        <input type="text" id="city" placeholder="Enter City Name">
+        <button onclick="checkWeather()">See</button>
+    </div>
+
+    <div id="currentWeather"></div>
+
+    <div class="weather-result" id="weatherResult"></div>
+    <div id="nextFiveDaysButtonContainer" style="display: none;">
+        <button onclick="checkWeatherForNextFiveDays()">See Next Five Days Weather</button>
+    </div>
+    <div class="weather-result" id="nextFiveDaysWeatherResult"></div>
+
+    <script>
+        function getWeatherImage(description) {
+            description = description.toLowerCase();
+            if (description.includes("clear")) {
+                return "https://cdn-icons-png.flaticon.com/512/869/869869.png"; 
+            } else if (description.includes("cloud")) {
+                return "https://cdn-icons-png.flaticon.com/512/414/414825.png"; 
+            } else if (description.includes("rain")) {
+                return "https://cdn-icons-png.flaticon.com/512/1146/1146858.png"; 
+            } else if (description.includes("snow")) {
+                return "https://cdn-icons-png.flaticon.com/512/642/642102.png"; 
+            } else if (description.includes("thunderstorm")) {
+                return "https://cdn-icons-png.flaticon.com/512/1146/1146869.png"; 
+            } else {
+                return "https://cdn-icons-png.flaticon.com/512/414/414825.png"; 
+            }
+        }
+
+        function checkWeather() {
+            const city = document.getElementById('city').value;
+            const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=9221100d5ff9086cd0f69da09cf0d795&units=metric`;
+
+            fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('City not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                let currentTemperature = data.list[0].main.temp;
+                let currentDay = new Date(data.list[0].dt_txt).toLocaleDateString('en-US', { weekday: 'long' });
+                let currentHTML = `
+                    <div class="current-weather-box">
+                        <h2>Current Temperature in ${city} (${currentDay})</h2>
+                        <p>Temp: ${currentTemperature}°C</p>
+                    </div>
+                `;
+                document.getElementById('currentWeather').innerHTML = currentHTML;
+
+                let resultHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    let forecast = data.list[i];
+                    let dateTime = new Date(forecast.dt_txt).toLocaleString();
+                    let temperature = forecast.main.temp;
+                    let weatherDescription = forecast.weather[0].description;
+                    let iconUrl = getWeatherImage(weatherDescription);
+                    let forecastDay = new Date(forecast.dt_txt).toLocaleDateString('en-US', { weekday: 'long' });
+
+                    resultHTML += `
+                        <div class="weather-box">
+                            <h2>${dateTime} (${forecastDay})</h2>
+                            <img src="${iconUrl}" alt="Weather Icon">
+                            <p>Temp: ${temperature}°C</p>
+                            <p>Description: ${weatherDescription}</p>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('inputContainer').style.display = 'none';
+                document.getElementById('mainHeading').innerText = `Weather Forecasting in ${city}`;
+                document.getElementById('weatherResult').innerHTML = resultHTML;
+                document.getElementById('nextFiveDaysButtonContainer').style.display = 'block';
+            })
+            .catch(error => {
+                document.getElementById('weatherResult').innerHTML = `<p>${error.message}</p>`;
+            });
+        }
+
+        function checkWeatherForNextFiveDays() {
+            const city = document.getElementById('city').value;
+            const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=9221100d5ff9086cd0f69da09cf0d795&units=metric`;
+
+            fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('City not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                let resultHTML = '';
+                let dailyForecasts = {};
+
+                // Group forecasts by day
+                data.list.forEach(forecast => {
+                    let date = forecast.dt_txt.split(' ')[0];
+                    if (!dailyForecasts[date]) {
+                        dailyForecasts[date] = [];
+                    }
+                    dailyForecasts[date].push(forecast);
+                });
+
+                let days = Object.keys(dailyForecasts);
+                for (let i = 0; i < 5; i++) {
+                    let forecasts = dailyForecasts[days[i]];
+                    let avgTemp = forecasts.reduce((sum, f) => sum + f.main.temp, 0) / forecasts.length;
+                    let avgHumidity = forecasts.reduce((sum, f) => sum + f.main.humidity, 0) / forecasts.length;
+                    let avgWindSpeed = forecasts.reduce((sum, f) => sum + f.wind.speed, 0) / forecasts.length;
+                    let weatherDescription = forecasts[0].weather[0].description;
+                    let iconUrl = getWeatherImage(weatherDescription);
+                    let dateForecast = new Date(forecasts[0].dt_txt).toLocaleDateString('en-US', { weekday: 'long' });
+
+                    resultHTML += `
+                        <div class="weather-box">
+                            <h2>${dateForecast}</h2>
+                            <img src="${iconUrl}" alt="Weather Icon">
+                            <p>Temp: ${avgTemp.toFixed(1)}°C</p>
+                            <p>Humidity: ${avgHumidity.toFixed(1)}%</p>
+                            <p>Wind Speed: ${avgWindSpeed.toFixed(1)} m/s</p>
+                            <p>Description: ${weatherDescription}</p>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('nextFiveDaysWeatherResult').innerHTML = resultHTML;
+            })
+            .catch(error => {
+                document.getElementById('nextFiveDaysWeatherResult').innerHTML = `<p>${error.message}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>
